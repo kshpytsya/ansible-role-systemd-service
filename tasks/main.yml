@@ -1,0 +1,91 @@
+- name: "service: {{ svc_name }} | Ensure group"
+  group:
+    name: "{{ svc_group }}"
+  when: svc_manage_group
+
+- name: "service: {{ svc_name }} | Ensure user"
+  user:
+    name: "{{ svc_user }}"
+    group: "{{ svc_group }}"
+    groups: "{{ svc_groups }}"
+    system: yes
+  when: svc_manage_user
+
+- name: "service: {{ svc_name }} | Ensure config directory"
+  file:
+    path: "{{ svc_config_dir }}"
+    state: directory
+    mode: "0750"
+    owner: "{{ svc_user }}"
+    group: "{{ svc_group }}"
+  when: svc_config_files_src != "" or svc_config_templates_src != ""
+
+- name: "service: {{ svc_name }} | Copy config files"
+  copy:
+    src: "{{ item }}"
+    dest: "{{ svc_config_dir }}"
+    mode: "0640"
+    owner: "{{ svc_user }}"
+    group: "{{ svc_group }}"
+  with_fileglob: "{{ svc_config_files_src }}/*"
+  when: svc_config_files_src != ""
+  notify: "{{ svc_config_notify_handler }}"
+
+- name: "service: {{ svc_name }} | Produce config templates"
+  template:
+    src: "{{ item }}"
+    dest: "{{ svc_config_dir }}/{{ item | basename | regex_replace('\\.j2$','') }}"
+    mode: "0640"
+    owner: "{{ svc_user }}"
+    group: "{{ svc_group }}"
+  with_fileglob: "{{ svc_config_templates_src }}/*.j2"
+  when: svc_config_templates_src != ""
+  notify: "{{ svc_config_notify_handler }}"
+
+- name: "service: {{ svc_name }} | Ensure data directories"
+  file:
+    path: "{{ item }}"
+    state: directory
+    mode: "0750"
+    group: "{{ svc_group }}"
+    owner: "{{ svc_user }}"
+  with_items:
+  - "{{ svc_persistent_data_dir }}"
+  - "{{ svc_transient_data_dir }}"
+
+- name: "service: {{ svc_name }} | Install systemd service"
+  template:
+    src: ../templates/systemd.service.j2
+    dest: /etc/systemd/system/{{ svc_systemd_name }}.service
+  notify: "restart {{ svc_name }}"
+
+# - name: "service: {{ svc_name }} | Start systemd service"
+#   service:
+#     name: "{{ svc_systemd_name }}"
+#     state: started
+#     enabled: yes
+#     daemon_reload: yes
+
+- name: "service: {{ svc_name }} | Flush handlers"
+  meta: flush_handlers
+
+- name: "service: {{ svc_name }} | HTTP check{{ (svc_check_url_message == '') | ternary('', '. ') }}{{ svc_check_url_message }}"
+  uri:
+    url: "{{ svc_check_url }}"
+    method: GET
+    status_code: "{{ svc_check_url_good_statuses }}"
+    return_content: true
+  register: check_result
+  retries: "{{ svc_check_url_retries }}"
+  until: check_result is succeeded
+  delay: "{{ svc_check_url_delay }}"
+  changed_when: false
+  when: svc_check_url != ""
+
+- name: "service: {{ svc_name }} | Check API returned content type"
+  fail:
+    msg: "Wrong content type. Expected '{{ svc_check_url_content_type }}', got '{{ check_result.content_type }}'"
+  when:
+  - svc_check_url != ""
+  - svc_check_url_content_type != ""
+  - check_result.content_type != svc_check_url_content_type

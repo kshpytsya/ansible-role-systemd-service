@@ -1,0 +1,30 @@
+svc_args: ""
+svc_check_url: ""
+svc_check_url_content_type: ""
+svc_check_url_delay: 10
+svc_check_url_good_statuses: 200
+svc_check_url_message: ""
+svc_check_url_retries: 30
+svc_config_dir: "/etc/{{ svc_name }}"
+svc_config_files_src: ""
+svc_config_templates_src: ""
+svc_description: "{{ svc_name }} service"
+svc_executable_dir: /usr/bin
+svc_executable: "{{ svc_executable_dir }}/{{ svc_name }}"
+svc_groups: []
+svc_group: "{{ svc_name }}"
+svc_hup_reload: false
+svc_manage_group: true
+svc_manage_user: true
+svc_persistent_data_dir_root: /var/lib
+svc_persistent_data_dir: "{{ svc_persistent_data_dir_root }}/{{ svc_name }}"
+svc_systemd_after: network-online.target
+svc_systemd_extra: ""
+svc_systemd_name: "{{ svc_name }}"
+svc_systemd_requires: network-online.target
+svc_systemd_restart: on-failure
+svc_transient_data_dir_root: /var/run
+svc_transient_data_dir: "{{ svc_transient_data_dir_root }}/{{ svc_name }}"
+svc_user: "{{ svc_name }}"
+svc_workdir_persistent: false
+svc_workdir: "{{ svc_workdir_persistent | ternary(svc_persistent_data_dir, svc_transient_data_dir) }}"

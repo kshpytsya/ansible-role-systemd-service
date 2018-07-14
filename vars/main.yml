@@ -1,0 +1,1 @@
+svc_config_notify_handler: "{{ svc_hup_reload | ternary('reload', 'restart') }} {{ svc_name }}"
