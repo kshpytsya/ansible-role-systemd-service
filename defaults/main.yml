@@ -9,6 +9,7 @@ svc_config_dir: "/etc/{{ svc_name }}"
 svc_config_files_src: ""
 svc_config_templates_src: ""
 svc_description: "{{ svc_name }} service"
+svc_enabled: true
 svc_executable_dir: /usr/bin
 svc_executable: "{{ svc_executable_dir }}/{{ svc_name }}"
 svc_groups: []

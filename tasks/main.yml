@@ -59,12 +59,11 @@
     dest: /etc/systemd/system/{{ svc_systemd_name }}.service
   notify: "restart {{ svc_name }}"
 
-# - name: "service: {{ svc_name }} | Start systemd service"
-#   service:
-#     name: "{{ svc_systemd_name }}"
-#     state: started
-#     enabled: yes
-#     daemon_reload: yes
+- name: "service: {{ svc_name }} | Enable systemd service"
+  systemd:
+    name: "{{ svc_name }}"
+    enabled: yes
+  when: svc_enabled
 
 - name: "service: {{ svc_name }} | Flush handlers"
   meta: flush_handlers
