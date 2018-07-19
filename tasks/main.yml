@@ -42,16 +42,22 @@
   when: svc_config_templates_src != ""
   notify: "{{ svc_config_notify_handler }}"
 
-- name: "service: {{ svc_name }} | Ensure data directories"
+- name: "service: {{ svc_name }} | Configure tmpfiles.d"
+  copy:
+    content: "d {{ svc_transient_data_dir }} 750 {{ svc_user }} {{ svc_group }}"
+    dest: "/etc/tmpfiles.d/{{ svc_name }}.conf"
+    mode: "0400"
+
+- name: "service: {{ svc_name }} | systemd-tmpfiles --create"
+  command: systemd-tmpfiles --create
+
+- name: "service: {{ svc_name }} | Ensure persistent data directory"
   file:
-    path: "{{ item }}"
+    path: "{{ svc_persistent_data_dir }}"
     state: directory
     mode: "0750"
     group: "{{ svc_group }}"
     owner: "{{ svc_user }}"
-  with_items:
-  - "{{ svc_persistent_data_dir }}"
-  - "{{ svc_transient_data_dir }}"
 
 - name: "service: {{ svc_name }} | Install systemd service"
   template:
