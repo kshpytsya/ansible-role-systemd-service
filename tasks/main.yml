@@ -1,96 +1,97 @@
-- name: "service: {{ svc_name }} | Ensure group"
+- name: "service: {{ svc__opts_name }} | Ensure group"
   group:
-    name: "{{ svc_group }}"
-  when: svc_manage_group
+    name: "{{ svc__opts_group }}"
+  when: svc__opts_manage_group
 
-- name: "service: {{ svc_name }} | Ensure user"
+- name: "service: {{ svc__opts_name }} | Ensure user"
   user:
-    name: "{{ svc_user }}"
-    group: "{{ svc_group }}"
-    groups: "{{ svc_groups }}"
+    name: "{{ svc__opts_user }}"
+    group: "{{ svc__opts_group }}"
+    groups: "{{ svc__opts_groups }}"
     system: yes
-  when: svc_manage_user
+  when: svc__opts_manage_user
 
-- name: "service: {{ svc_name }} | Ensure config directory"
+- name: "service: {{ svc__opts_name }} | Ensure config directory"
   file:
-    path: "{{ svc_config_dir }}"
+    path: "{{ svc__opts_config_dir }}"
     state: directory
     mode: "0750"
-    owner: "{{ svc_user }}"
-    group: "{{ svc_group }}"
-  when: svc_config_files_src != "" or svc_config_templates_src != ""
+    owner: "{{ svc__opts_user }}"
+    group: "{{ svc__opts_group }}"
+  when: svc__opts_config_files_src != "" or svc__opts_config_templates_src != ""
 
-- name: "service: {{ svc_name }} | Copy config files"
+- name: "service: {{ svc__opts_name }} | Copy config files"
   copy:
     src: "{{ item }}"
-    dest: "{{ svc_config_dir }}"
+    dest: "{{ svc__opts_config_dir }}"
     mode: "0640"
-    owner: "{{ svc_user }}"
-    group: "{{ svc_group }}"
-  with_fileglob: "{{ svc_config_files_src }}/*"
-  when: svc_config_files_src != ""
-  notify: "{{ svc_config_notify_handler }}"
+    owner: "{{ svc__opts_user }}"
+    group: "{{ svc__opts_group }}"
+  with_fileglob: "{{ svc__opts_config_files_src }}/*"
+  when: svc__opts_config_files_src != ""
+  notify: "{{ svc__config_notify_handler }}"
 
-- name: "service: {{ svc_name }} | Produce config templates"
+- name: "service: {{ svc__opts_name }} | Produce config templates"
   template:
     src: "{{ item }}"
-    dest: "{{ svc_config_dir }}/{{ item | basename | regex_replace('\\.j2$','') }}"
+    dest: "{{ svc__opts_config_dir }}/{{ item | basename | regex_replace('\\.j2$','') }}"
     mode: "0640"
-    owner: "{{ svc_user }}"
-    group: "{{ svc_group }}"
-  with_fileglob: "{{ svc_config_templates_src }}/*.j2"
-  when: svc_config_templates_src != ""
-  notify: "{{ svc_config_notify_handler }}"
+    owner: "{{ svc__opts_user }}"
+    group: "{{ svc__opts_group }}"
+  with_fileglob: "{{ svc__opts_config_templates_src }}/*.j2"
+  when: svc__opts_config_templates_src != ""
+  notify: "{{ svc__config_notify_handler }}"
 
-- name: "service: {{ svc_name }} | Configure tmpfiles.d"
+- name: "service: {{ svc__opts_name }} | Configure tmpfiles.d"
   copy:
-    content: "d {{ svc_transient_data_dir }} 750 {{ svc_user }} {{ svc_group }}"
-    dest: "/etc/tmpfiles.d/{{ svc_name }}.conf"
+    content: "d {{ svc__opts_transient_data_dir }} 750 {{ svc__opts_user }} {{ svc__opts_group }}"
+    dest: "/etc/tmpfiles.d/{{ svc__opts_name }}.conf"
     mode: "0400"
 
-- name: "service: {{ svc_name }} | systemd-tmpfiles --create"
+- name: "service: {{ svc__opts_name }} | systemd-tmpfiles --create"
   command: systemd-tmpfiles --create
 
-- name: "service: {{ svc_name }} | Ensure persistent data directory"
+- name: "service: {{ svc__opts_name }} | Ensure persistent data directory"
   file:
-    path: "{{ svc_persistent_data_dir }}"
+    path: "{{ svc__opts_persistent_data_dir }}"
     state: directory
     mode: "0750"
-    group: "{{ svc_group }}"
-    owner: "{{ svc_user }}"
+    group: "{{ svc__opts_group }}"
+    owner: "{{ svc__opts_user }}"
 
-- name: "service: {{ svc_name }} | Install systemd service"
+- name: "service: {{ svc__opts_name }} | Install systemd service"
   template:
     src: ../templates/systemd.service.j2
-    dest: /etc/systemd/system/{{ svc_systemd_name }}.service
-  notify: "restart {{ svc_name }}"
+    dest: /etc/systemd/system/{{ svc__opts_systemd_name }}.service
+  notify: "restart {{ svc__opts_name }}"
 
-- name: "service: {{ svc_name }} | Enable systemd service"
+- name: "service: {{ svc__opts_name }} | Enable systemd service"
   systemd:
-    name: "{{ svc_name }}"
+    name: "{{ svc__opts_name }}"
     enabled: yes
-  when: svc_enabled
+  when: svc__opts_enabled
 
-- name: "service: {{ svc_name }} | Flush handlers"
+- name: "service: {{ svc__opts_name }} | Flush handlers"
   meta: flush_handlers
 
-- name: "service: {{ svc_name }} | HTTP check{{ (svc_check_url_message == '') | ternary('', '. ') }}{{ svc_check_url_message }}"
+- name: "service: {{ svc__opts_name }} | HTTP check
+         {{ (svc__opts_check_url_message == '') | ternary('', '. ') }}{{ svc__opts_check_url_message }}"
   uri:
-    url: "{{ svc_check_url }}"
+    url: "{{ svc__opts_check_url }}"
     method: GET
-    status_code: "{{ svc_check_url_good_statuses }}"
+    status_code: "{{ svc__opts_check_url_good_statuses }}"
     return_content: true
   register: check_result
-  retries: "{{ svc_check_url_retries }}"
+  retries: "{{ svc__opts_check_url_retries }}"
   until: check_result is succeeded
-  delay: "{{ svc_check_url_delay }}"
+  delay: "{{ svc__opts_check_url_delay }}"
   changed_when: false
-  when: svc_check_url != ""
+  when: svc__opts_check_url != ""
 
-- name: "service: {{ svc_name }} | Check API returned content type"
+- name: "service: {{ svc__opts_name }} | Check API returned content type"
   fail:
-    msg: "Wrong content type. Expected '{{ svc_check_url_content_type }}', got '{{ check_result.content_type }}'"
+    msg: "Wrong content type. Expected '{{ svc__opts_check_url_content_type }}', got '{{ check_result.content_type }}'"
   when:
-  - svc_check_url != ""
-  - svc_check_url_content_type != ""
-  - check_result.content_type != svc_check_url_content_type
+  - svc__opts_check_url != ""
+  - svc__opts_check_url_content_type != ""
+  - check_result.content_type != svc__opts_check_url_content_type

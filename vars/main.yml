@@ -1,1 +1,42 @@
-svc_config_notify_handler: "{{ svc_hup_reload | ternary('reload', 'restart') }} {{ svc_name }}"
+# required options
+svc__opts_name: "{{ svc_opts.name }}"
+
+# optional options
+svc__opts_args: "{{ svc_opts.args | default('') }}"
+svc__opts_check_url: "{{ svc_opts.check_url | default('') }}"
+svc__opts_check_url_content_type: "{{ svc_opts.check_url_content_type | default('') }}"
+svc__opts_check_url_delay: "{{ svc_opts.check_url_delay | default(10) }}"
+svc__opts_check_url_good_statuses: "{{ svc_opts.check_url_good_statuses | default('200') }}"
+svc__opts_check_url_message: "{{ svc_opts.check_url_message | default('') }}"
+svc__opts_check_url_retries: "{{ svc_opts.check_url_retries | default(30) }}"
+svc__opts_config_dir: "{{ svc_opts.config_dir | default('/etc/{}'.format(svc__opts_name)) }}"
+svc__opts_config_files_src: "{{ svc_opts.config_files_src | default('') }}"
+svc__opts_config_templates_src: "{{ svc_opts.config_templates_src | default('') }}"
+svc__opts_description: "{{ svc_opts.description | default('{} service'.format(svc__opts_name)) }}"
+svc__opts_enabled: "{{ svc_opts.enabled | default(true) }}"
+svc__opts_executable_dir: "{{ svc_opts.executable_dir | default('/usr/bin') }}"
+svc__opts_executable: "{{ svc_opts.executable | default('{}/{}'.format(svc__opts_executable_dir,  svc__opts_name)) }}"
+svc__opts_groups: "{{ svc_opts.groups | default([]) }}"
+svc__opts_group: "{{ svc_opts.group | default(svc__opts_name) }}"
+svc__opts_hup_reload: "{{ svc_opts.hup_reload | default(false) }}"
+svc__opts_manage_group: "{{ svc_opts.manage_group | default(true) }}"
+svc__opts_manage_user: "{{ svc_opts.manage_user | default(true) }}"
+svc__opts_persistent_data_dir_root: "{{ svc_opts.persistent_data_dir_root | default('/var/lib') }}"
+svc__opts_persistent_data_dir: "{{ svc_opts.persistent_data_dir |
+                                     default('{}/{}'.format(svc__opts_persistent_data_dir_root, svc__opts_name)) }}"
+svc__opts_systemd_after: "{{ svc_opts.systemd_after | default('network-online.target') }}"
+svc__opts_systemd_extra: "{{ svc_opts.systemd_extra | default('') }}"
+svc__opts_systemd_name: "{{ svc_opts.systemd_name | default(svc__opts_name) }}"
+svc__opts_systemd_requires: "{{ svc_opts.systemd_requires | default('network-online.target') }}"
+svc__opts_systemd_restart: "{{ svc_opts.systemd_restart | default('on-failure') }}"
+svc__opts_transient_data_dir_root: "{{ svc_opts.transient_data_dir_root | default('/var/run') }}"
+svc__opts_transient_data_dir: "{{ svc_opts.transient_data_dir |
+                                    default('{}/{}'.format(svc__opts_transient_data_dir_root, svc__opts_name)) }}"
+svc__opts_user: "{{ svc_opts.user | default(svc__opts_name) }}"
+svc__opts_workdir_persistent: "{{ svc_opts.workdir_persistent | default(false) }}"
+svc__opts_workdir: "{{ svc_opts.workdir |
+                         default(svc__opts_workdir_persistent |
+                                   ternary(svc__opts_persistent_data_dir, svc__opts_transient_data_dir)) }}"
+
+# derrived variables
+svc__config_notify_handler: "{{ svc__opts_hup_reload | ternary('reload', 'restart') }} {{ svc__opts_name }}"
