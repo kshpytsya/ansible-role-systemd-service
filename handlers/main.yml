@@ -1,12 +1,12 @@
-- name: restart {{ svc_name }}
+- name: restart {{ svc__opts_name }}
   systemd:
-    name: "{{ svc_systemd_name }}"
+    name: "{{ svc__opts_systemd_name }}"
     state: restarted
     daemon_reload: yes
-  when: svc_enabled
+  when: svc__opts_enabled
 
-- name: reload {{ svc_name }}
+- name: reload {{ svc__opts_name }}
   systemd:
-    name: "{{ svc_systemd_name }}"
+    name: "{{ svc__opts_systemd_name }}"
     state: reloaded
-  when: svc_enabled
+  when: svc__opts_enabled

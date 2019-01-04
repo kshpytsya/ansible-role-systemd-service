@@ -1,20 +1,20 @@
 # See https://www.freedesktop.org/software/systemd/man/systemd.service.html
 
 [Unit]
-Description={{ svc_description }}
-Requires={{ svc_systemd_requires }}
-After={{ svc_systemd_after }}
+Description={{ svc__opts_description }}
+Requires={{ svc__opts_systemd_requires }}
+After={{ svc__opts_systemd_after }}
 
 [Service]
-User={{ svc_user }}
-Group={{ svc_group }}
-ExecStart={{ svc_executable }} {{ svc_args }}
-{% if svc_hup_reload -%}
+User={{ svc__opts_user }}
+Group={{ svc__opts_group }}
+ExecStart={{ svc__opts_executable }} {{ svc__opts_args }}
+{% if svc__opts_hup_reload -%}
 ExecReload=/bin/kill -HUP $MAINPID
 {% endif -%}
-Restart={{ svc_systemd_restart }}
-WorkingDirectory={{ svc_workdir }}
-{{ svc_systemd_extra }}
+Restart={{ svc__opts_systemd_restart }}
+WorkingDirectory={{ svc__opts_workdir }}
+{{ svc__opts_systemd_extra }}
 
 [Install]
 WantedBy=multi-user.target
